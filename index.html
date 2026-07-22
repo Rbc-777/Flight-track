@@ -49,7 +49,7 @@
 
 
   /* ---------- LEGEND ---------- */
-
+  #legend{
     display:flex; align-items:center; gap:10px; padding:8px 16px; border-bottom:1px solid var(--line);
     font-size:9px; letter-spacing:.5px; color:var(--text-dim); flex-wrap:wrap;
   }
@@ -94,22 +94,57 @@
   .flight-row .meta{color:var(--text-dim); font-size:10px; margin-top:2px;}
   .flight-row .alt{color:var(--amber); font-size:11px; font-weight:600;}
 
-  #detail{position:relative; padding:14px 16px 16px 20px; border-top:1px solid var(--line); background:var(--panel-2); display:none;}
-  #detail.show{display:block;}
-  #detail::before{
-    content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--strip-color, var(--green));
-    box-shadow:0 0 8px var(--strip-color, var(--green));
+  #detail{display:none;} /* legacy id kept unused */
+
+  /* ---------- DETAIL SHEET (aircraft page) ---------- */
+  #detailBackdrop{
+    position:fixed; inset:0; background:rgba(5,8,12,0.55); z-index:1400;
+    opacity:0; pointer-events:none; transition:opacity .2s;
   }
-  #detail .cs-big{font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; color:var(--text); letter-spacing:2px;}
-  #detail .band-tag{
+  #detailBackdrop.show{opacity:1; pointer-events:auto;}
+
+  #detailSheet{
+    position:fixed; left:50%; bottom:0; transform:translate(-50%, 100%);
+    width:420px; max-width:100vw; max-height:88vh; z-index:1500;
+    background:var(--panel); border:1px solid var(--line); border-bottom:none;
+    border-radius:14px 14px 0 0; overflow-y:auto; transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    box-shadow:0 -12px 40px rgba(0,0,0,0.5);
+  }
+  #detailSheet.show{transform:translate(-50%, 0);}
+
+  #detailPhoto{
+    position:relative; width:100%; height:180px; background:var(--panel-2) center/cover no-repeat;
+    display:flex; align-items:flex-end;
+  }
+  #detailPhoto .fade{
+    position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,14,20,0) 30%, rgba(10,14,20,0.95) 100%);
+  }
+  #detailPhoto .noPhoto{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--text-dim); font-size:11px; letter-spacing:1px;
+  }
+  #detailPhoto .head{position:relative; z-index:2; padding:12px 16px; width:100%;}
+  #detailPhoto .cs-big{font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:#fff; letter-spacing:2px; text-shadow:0 1px 6px rgba(0,0,0,0.6);}
+  #detailPhoto .sub{font-size:11px; color:#c8d4de; margin-top:2px;}
+  #detailPhoto .band-tag{
     display:inline-block; font-size:9px; letter-spacing:1.5px; color:var(--strip-color, var(--green));
-    border:1px solid var(--strip-color, var(--green)); border-radius:2px; padding:1px 6px; margin-left:8px; vertical-align:middle;
+    background:rgba(10,14,20,0.6); border:1px solid var(--strip-color, var(--green)); border-radius:2px;
+    padding:2px 7px; margin-top:6px;
   }
-  #detail .country{font-size:11px; color:var(--text-dim); margin-bottom:10px; margin-top:4px;}
-  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;}
-  .field{background:var(--panel); border:1px solid var(--line); border-radius:3px; padding:7px 9px;}
+  #closeDetail{
+    position:absolute; top:10px; right:10px; z-index:3; width:30px; height:30px; border-radius:50%;
+    background:rgba(10,14,20,0.65); border:1px solid var(--line); color:#fff; font-size:14px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  #photoCredit{padding:4px 16px 0; font-size:9px; color:var(--text-dim); text-align:right;}
+  #photoCredit a{color:var(--text-dim);}
+
+  #detailBody{padding:14px 16px 22px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:2px;}
+  .field{background:var(--panel-2); border:1px solid var(--line); border-radius:5px; padding:8px 10px;}
   .field .k{font-size:9px; color:var(--text-dim); letter-spacing:1px; margin-bottom:3px;}
   .field .v{font-size:13px; color:var(--text); font-weight:600;}
+  .full{grid-column:1/-1;}
 
   #empty{padding:40px 20px; text-align:center; color:var(--text-dim); font-size:11px; line-height:1.7;}
 
@@ -180,23 +215,36 @@
     </div>
 
     <div id="flightList"><div id="empty">Chargement des vols en direct…</div></div>
+  </div>
+</div>
 
-    <div id="detail">
-      <div class="cs-big" id="dCallsign">—</div><span class="band-tag" id="dBand">—</span>
-      <div class="country" id="dCountry">—</div>
-      <div class="grid2">
-        <div class="field"><div class="k">ALTITUDE</div><div class="v" id="dAlt">—</div></div>
-        <div class="field"><div class="k">VITESSE</div><div class="v" id="dSpeed">—</div></div>
-        <div class="field"><div class="k">CAP</div><div class="v" id="dHeading">—</div></div>
-        <div class="field"><div class="k">V. VERTICALE</div><div class="v" id="dVrate">—</div></div>
-        <div class="field"><div class="k">SQUAWK</div><div class="v" id="dSquawk">—</div></div>
-        <div class="field"><div class="k">ICAO24</div><div class="v" id="dIcao">—</div></div>
-        <div class="field" style="grid-column:1/-1;"><div class="k">OPÉRATEUR</div><div class="v" id="dOperator">—</div></div>
-        <div class="field"><div class="k">ANNÉE</div><div class="v" id="dYear">—</div></div>
-        <div class="field"><div class="k">AU SOL</div><div class="v" id="dGround">—</div></div>
-        <div class="field" style="grid-column:1/-1;"><div class="k">POSITION</div><div class="v" id="dPos">—</div></div>
-        <div class="field" style="grid-column:1/-1;"><div class="k">DERNIÈRE MAJ SIGNAL</div><div class="v" id="dSeen">—</div></div>
-      </div>
+<!-- FlightRadar-style aircraft detail page -->
+<div id="detailBackdrop"></div>
+<div id="detailSheet">
+  <button id="closeDetail">✕</button>
+  <div id="detailPhoto">
+    <div class="noPhoto" id="noPhotoMsg">PHOTO INDISPONIBLE</div>
+    <div class="fade"></div>
+    <div class="head">
+      <div class="cs-big" id="dCallsign">—</div>
+      <div class="sub" id="dCountry">—</div>
+      <div class="band-tag" id="dBand">—</div>
+    </div>
+  </div>
+  <div id="photoCredit"></div>
+  <div id="detailBody">
+    <div class="grid2">
+      <div class="field"><div class="k">ALTITUDE</div><div class="v" id="dAlt">—</div></div>
+      <div class="field"><div class="k">VITESSE</div><div class="v" id="dSpeed">—</div></div>
+      <div class="field"><div class="k">CAP</div><div class="v" id="dHeading">—</div></div>
+      <div class="field"><div class="k">V. VERTICALE</div><div class="v" id="dVrate">—</div></div>
+      <div class="field"><div class="k">SQUAWK</div><div class="v" id="dSquawk">—</div></div>
+      <div class="field"><div class="k">ICAO24</div><div class="v" id="dIcao">—</div></div>
+      <div class="field full"><div class="k">OPÉRATEUR</div><div class="v" id="dOperator">—</div></div>
+      <div class="field"><div class="k">ANNÉE</div><div class="v" id="dYear">—</div></div>
+      <div class="field"><div class="k">AU SOL</div><div class="v" id="dGround">—</div></div>
+      <div class="field full"><div class="k">POSITION</div><div class="v" id="dPos">—</div></div>
+      <div class="field full"><div class="k">DERNIÈRE MAJ SIGNAL</div><div class="v" id="dSeen">—</div></div>
     </div>
   </div>
 </div>
@@ -216,6 +264,10 @@
   let forceMaxRadius = false;
   let lastFetchTime = 0;
   const MIN_INTERVAL = 10000; // be a good citizen of a free, keyless public API
+
+  let trailLine = null;
+  let trailCoords = [];
+  const photoCache = new Map(); // icao24 -> photo object or 'none'
 
   const planeSVG = (color, ringed) => `
     <svg width="26" height="26" viewBox="0 0 26 26" style="transform:rotate(var(--rot,0deg));">
@@ -262,6 +314,21 @@
     const el = document.getElementById('error');
     if(!msg){ el.classList.remove('show'); return; }
     el.textContent = msg; el.classList.add('show');
+  }
+
+  async function fetchPhoto(icao24){
+    if(photoCache.has(icao24)) return photoCache.get(icao24);
+    try{
+      const res = await fetch(`https://api.planespotters.net/pub/photos/hex/${icao24}`);
+      if(!res.ok) throw new Error('no photo');
+      const data = await res.json();
+      const p = (data.photos && data.photos[0]) || null;
+      photoCache.set(icao24, p);
+      return p;
+    }catch(e){
+      photoCache.set(icao24, null);
+      return null;
+    }
   }
 
   const PROVIDERS = [
@@ -357,13 +424,19 @@
         marker.addTo(map);
         markers.set(icao24, {marker, data: rec});
       }
+
+      if(icao24 === selectedIcao){
+        trailCoords.push([lat, lon]);
+        if(trailCoords.length > 80) trailCoords.shift();
+        if(trailLine){ trailLine.setLatLngs(trailCoords); }
+      }
     }
     // remove stale markers
     for(const [icao24, m] of markers){
       if(!seen.has(icao24)){
         map.removeLayer(m.marker);
         markers.delete(icao24);
-        if(selectedIcao === icao24){ selectedIcao = null; document.getElementById('detail').classList.remove('show'); }
+        if(selectedIcao === icao24){ closeDetail(); }
       }
     }
     document.getElementById('statCount').textContent = count.toLocaleString('fr-CH');
@@ -396,14 +469,23 @@
     });
   }
 
-  function selectFlight(icao24){
+  function closeDetail(){
+    selectedIcao = null;
+    document.getElementById('detailSheet').classList.remove('show');
+    document.getElementById('detailBackdrop').classList.remove('show');
+    if(trailLine){ map.removeLayer(trailLine); trailLine = null; }
+    trailCoords = [];
+    renderList();
+  }
+
+  async function selectFlight(icao24){
     const prevSelected = selectedIcao;
     selectedIcao = icao24;
     const rec = markers.get(icao24);
     if(!rec) return;
 
     // refresh icons for old + new selection
-    if(prevSelected && markers.has(prevSelected)){
+    if(prevSelected && prevSelected !== icao24 && markers.has(prevSelected)){
       const p = markers.get(prevSelected);
       p.marker.setIcon(iconFor(p.data, false));
     }
@@ -411,11 +493,19 @@
 
     map.panTo([rec.data.lat, rec.data.lon]);
 
+    // reset & (re)start the flight trail for this aircraft
+    if(prevSelected !== icao24){
+      trailCoords = [[rec.data.lat, rec.data.lon]];
+      if(trailLine){ map.removeLayer(trailLine); }
+      trailLine = L.polyline(trailCoords, { color: altColor(rec.data), weight: 2, opacity: 0.75, dashArray: '1,6' }).addTo(map);
+    }
+
     const d = rec.data;
     const color = altColor(d);
-    const detailEl = document.getElementById('detail');
-    detailEl.classList.add('show');
-    detailEl.style.setProperty('--strip-color', color);
+    const sheet = document.getElementById('detailSheet');
+    sheet.classList.add('show');
+    document.getElementById('detailBackdrop').classList.add('show');
+    sheet.style.setProperty('--strip-color', color);
     document.getElementById('dCallsign').textContent = d.callsign;
     const bandEl = document.getElementById('dBand');
     bandEl.textContent = bandLabel(d);
@@ -433,6 +523,24 @@
     document.getElementById('dPos').textContent = `${d.lat.toFixed(4)}, ${d.lon.toFixed(4)}`;
     document.getElementById('dSeen').textContent = d.seenSec != null ? `il y a ${d.seenSec.toFixed(0)}s` : '—';
 
+    // photo (only refetch when switching to a different aircraft)
+    if(prevSelected !== icao24){
+      const photoEl = document.getElementById('detailPhoto');
+      const noPhotoMsg = document.getElementById('noPhotoMsg');
+      const creditEl = document.getElementById('photoCredit');
+      photoEl.style.backgroundImage = '';
+      noPhotoMsg.style.display = 'none';
+      creditEl.innerHTML = '';
+      const photo = await fetchPhoto(icao24);
+      if(selectedIcao !== icao24) return; // user moved on before photo arrived
+      if(photo && photo.thumbnail_large && photo.thumbnail_large.src){
+        photoEl.style.backgroundImage = `url('${photo.thumbnail_large.src}')`;
+        creditEl.innerHTML = `Photo : ${photo.photographer || 'inconnu'} · <a href="${photo.link}" target="_blank" rel="noopener">planespotters.net</a>`;
+      } else {
+        noPhotoMsg.style.display = 'flex';
+      }
+    }
+
     renderList();
     if(window.innerWidth <= 760){ document.getElementById('sidebar').classList.remove('open'); }
   }
@@ -444,6 +552,8 @@
     document.getElementById('scanBtn').classList.toggle('primary', forceMaxRadius);
     fetchStates(true);
   });
+  document.getElementById('closeDetail').addEventListener('click', closeDetail);
+  document.getElementById('detailBackdrop').addEventListener('click', closeDetail);
   map.on('moveend', () => fetchStates(false));
   document.getElementById('menuBtn').addEventListener('click', () => {
     document.getElementById('sidebar').classList.toggle('open');

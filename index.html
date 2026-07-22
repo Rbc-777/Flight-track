@@ -48,18 +48,7 @@
   .leaflet-container{background:var(--bg);}
 
 
-  /* ---------- LEGEND ---------- */
-  #legend{
-    display:flex; align-items:center; gap:10px; padding:8px 16px; border-bottom:1px solid var(--line);
-    font-size:9px; letter-spacing:.5px; color:var(--text-dim); flex-wrap:wrap;
-  }
-  #legend .sw{display:inline-flex; align-items:center; gap:4px;}
-  #legend .dot{width:7px; height:7px; border-radius:50%; display:inline-block;}
-
-  /* freshness indicator states */
-  #brand .dot.stale{background:var(--amber); box-shadow:0 0 8px var(--amber); animation:none;}
-  #brand .dot.dead{background:var(--red); box-shadow:0 0 8px var(--red); animation:none;}
-
+  /* ---------- SIDEBAR ---------- */
 
   #sidebar{
     width:340px; height:100%; background:var(--panel); border-left:1px solid var(--line);
@@ -126,11 +115,7 @@
   #detailPhoto .head{position:relative; z-index:2; padding:12px 16px; width:100%;}
   #detailPhoto .cs-big{font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:#fff; letter-spacing:2px; text-shadow:0 1px 6px rgba(0,0,0,0.6);}
   #detailPhoto .sub{font-size:11px; color:#c8d4de; margin-top:2px;}
-  #detailPhoto .band-tag{
-    display:inline-block; font-size:9px; letter-spacing:1.5px; color:var(--strip-color, var(--green));
-    background:rgba(10,14,20,0.6); border:1px solid var(--strip-color, var(--green)); border-radius:2px;
-    padding:2px 7px; margin-top:6px;
-  }
+  #detailPhoto .band-tag{display:none;}
   #closeDetail{
     position:absolute; top:10px; right:10px; z-index:3; width:30px; height:30px; border-radius:50%;
     background:rgba(10,14,20,0.65); border:1px solid var(--line); color:#fff; font-size:14px;
@@ -197,14 +182,6 @@
   <div id="error"></div>
 
   <div id="sidebar">
-    <div id="legend">
-      <span class="sw"><span class="dot" style="background:var(--ground)"></span>SOL</span>
-      <span class="sw"><span class="dot" style="background:var(--teal)"></span>&lt;10K</span>
-      <span class="sw"><span class="dot" style="background:var(--green)"></span>10–30K</span>
-      <span class="sw"><span class="dot" style="background:var(--amber)"></span>30–40K</span>
-      <span class="sw"><span class="dot" style="background:var(--violet)"></span>&gt;40K</span>
-      <span class="sw"><span class="dot" style="background:var(--red)"></span>URGENCE</span>
-    </div>
     <div class="side-section">
       <div class="side-label">RECHERCHE INDICATIF</div>
       <input id="searchInput" placeholder="ex: AFR123, RYR4521…" autocomplete="off" />
@@ -228,7 +205,6 @@
     <div class="head">
       <div class="cs-big" id="dCallsign">—</div>
       <div class="sub" id="dCountry">—</div>
-      <div class="band-tag" id="dBand">—</div>
     </div>
   </div>
   <div id="photoCredit"></div>
@@ -277,29 +253,14 @@
       </g>
     </svg>`;
 
-  function altColor(d){
-    if(d.emergency) return getComputedStyle(document.documentElement).getPropertyValue('--red').trim();
-    const v = getComputedStyle(document.documentElement);
-    if(d.onGround) return v.getPropertyValue('--ground').trim();
-    if(d.alt == null) return v.getPropertyValue('--text-dim').trim();
-    if(d.alt < 10000) return v.getPropertyValue('--teal').trim();
-    if(d.alt < 30000) return v.getPropertyValue('--green').trim();
-    if(d.alt < 40000) return v.getPropertyValue('--amber').trim();
-    return v.getPropertyValue('--violet').trim();
-  }
-
-  function bandLabel(d){
-    if(d.emergency) return 'URGENCE';
-    if(d.onGround) return 'AU SOL';
-    if(d.alt == null) return 'ALT. INCONNUE';
-    if(d.alt < 10000) return '< 10 000 FT';
-    if(d.alt < 30000) return '10 000–30 000 FT';
-    if(d.alt < 40000) return '30 000–40 000 FT';
-    return '> 40 000 FT';
+  function markerColor(d){
+    return d.emergency
+      ? getComputedStyle(document.documentElement).getPropertyValue('--red').trim()
+      : getComputedStyle(document.documentElement).getPropertyValue('--green').trim();
   }
 
   function iconFor(d, isSelected){
-    const color = altColor(d);
+    const color = markerColor(d);
     const html = `<div class="plane-icon${isSelected?' selected':''}" style="--rot:${d.heading||0}deg;">${planeSVG(color, isSelected)}</div>`;
     return L.divIcon({html, className:'', iconSize:[26,26], iconAnchor:[13,13]});
   }
@@ -461,7 +422,7 @@
           <div class="cs">${d.callsign}</div>
           <div class="meta">${[d.type, d.reg].filter(Boolean).join(' · ') || '—'}</div>
         </div>
-        <div class="alt" style="color:${altColor(d)}">${d.onGround ? 'SOL' : fmtAlt(d.alt)}</div>
+        <div class="alt">${d.onGround ? 'SOL' : fmtAlt(d.alt)}</div>
       </div>
     `).join('');
     listEl.querySelectorAll('.flight-row').forEach(row => {
@@ -497,19 +458,16 @@
     if(prevSelected !== icao24){
       trailCoords = [[rec.data.lat, rec.data.lon]];
       if(trailLine){ map.removeLayer(trailLine); }
-      trailLine = L.polyline(trailCoords, { color: altColor(rec.data), weight: 2, opacity: 0.75, dashArray: '1,6' }).addTo(map);
+      trailLine = L.polyline(trailCoords, { color: markerColor(rec.data), weight: 2, opacity: 0.75, dashArray: '1,6' }).addTo(map);
     }
 
     const d = rec.data;
-    const color = altColor(d);
+    const color = markerColor(d);
     const sheet = document.getElementById('detailSheet');
     sheet.classList.add('show');
     document.getElementById('detailBackdrop').classList.add('show');
     sheet.style.setProperty('--strip-color', color);
     document.getElementById('dCallsign').textContent = d.callsign;
-    const bandEl = document.getElementById('dBand');
-    bandEl.textContent = bandLabel(d);
-    bandEl.style.color = color; bandEl.style.borderColor = color;
     document.getElementById('dCountry').textContent = [d.desc || d.type, d.reg].filter(Boolean).join(' · ') || 'Type/immat. inconnus';
     document.getElementById('dAlt').textContent = d.onGround ? 'Au sol' : fmtAlt(d.alt);
     document.getElementById('dSpeed').textContent = fmtSpeed(d.velocity);
